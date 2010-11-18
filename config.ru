@@ -1,11 +1,15 @@
 require 'rubygems'
-require 'eventmachine'
+require 'cramp/controller'
 
-#require './web/Application.rb'
-require './websocket/Server.rb'
+Cramp::Controller::Websocket.backend = :thin
 
-EM.run {
-  
-  #Handshake::Web::Application.run!({ :port => 3000 })
-  Handshake::Websocket::Server.run!("0.0.0.0", 8080, false);
-}
+class WelcomeController < Cramp::Controller::Websocket
+  on_data :received_data
+
+  def received_data(data)
+    render "Got your #{data}"
+  end
+end
+
+
+Rack::Handler::Thin.run WelcomeController, :Port => 3000
