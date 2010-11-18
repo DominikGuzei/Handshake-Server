@@ -113,6 +113,7 @@ module Handshake
         end
 
         puts "Server started"
+        EM.stop
       }
       end # self.run!
     end # class
