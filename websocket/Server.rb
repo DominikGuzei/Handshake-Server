@@ -11,6 +11,7 @@ module Handshake
       def self.run!(host, port)
         
         #EventMachine::WebSocket.start(:host => "0.0.0.0", :port => 10_000, :debug => true) do |websocket|
+          EM.run {
           EventMachine::start_server(host, port, 
                         EventMachine::WebSocket::Connection, nil) do |websocket|
           puts "i am in start block"
@@ -112,6 +113,7 @@ module Handshake
         end
 
         puts "Server started"
+      }
       end # self.run!
     end # class
     
