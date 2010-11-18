@@ -1,4 +1,4 @@
-require_relative 'Host'
+require 'Host'
 
 module HandShake
     

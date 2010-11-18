@@ -1,7 +1,7 @@
 require 'eventmachine'
 require 'em-websocket'
 require 'json'
-require_relative 'HostManager'
+require 'HostManager'
 
 module Handshake
   module Websocket
