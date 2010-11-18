@@ -8,16 +8,13 @@ module Handshake
   
     class Server
       
-      def self.run!(host, port)
+      def self.run!(host, port, debug)
         
-        #EventMachine::WebSocket.start(:host => "0.0.0.0", :port => 10_000, :debug => true) do |websocket|
-          EM.run {
-          EventMachine::start_server(host, port, 
-                        EventMachine::WebSocket::Connection, nil) do |websocket|
-          puts "i am in start block"
+        EventMachine::WebSocket.start(:host => host, :port => port, :debug => debug) do |websocket|
+          
           # handle connection requests
           websocket.onopen {
-            p "connection opened"
+            p "connection opened";
             # analyse request path to differentiate between clients and hosts
             host = websocket.request["Path"].match /host/
             if(host)
@@ -113,8 +110,6 @@ module Handshake
         end
 
         puts "Server started"
-        EM.stop
-      }
       end # self.run!
     end # class
     
