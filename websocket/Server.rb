@@ -14,6 +14,7 @@ module Handshake
 
           # handle connection requests
           websocket.onopen {
+            p "connection opened";
             # analyse request path to differentiate between clients and hosts
             host = websocket.request["Path"].match /host/
             if(host)
