@@ -2,7 +2,7 @@ require 'rubygems'
 require 'eventmachine'
 
 #require './web/Application.rb'
-require './websocket/Server.rb'
+require_relative 'websocket/Server'
 
 EM.run {
   
