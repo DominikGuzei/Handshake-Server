@@ -1,4 +1,4 @@
-require 'Client'
+require_relative 'Client'
 
 module HandShake
     
