@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'rspec'
 require 'mocha'
-require_relative '../Game'
+require_relative '../src/Game'
 require_relative 'stubs/Websocket'
 
 RSpec.configure do |config|

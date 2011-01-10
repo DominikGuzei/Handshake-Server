@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'rspec'
 require 'mocha'
-require_relative '../Controller'
+require_relative '../src/Controller'
 require_relative 'stubs/Websocket'
 
 RSpec.configure do |config|
