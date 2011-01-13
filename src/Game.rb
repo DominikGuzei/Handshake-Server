@@ -15,12 +15,13 @@ module Handshake
     end
     
     def addController(type, websocket)
-      @controller = Controller.new(type, @controllerCount, websocket)
-      @controllers.push(@controller)
+      controller = Controller.new(type, @controllerCount, websocket)
+      @controllers.push(controller)
       @controllerCount += 1
-      @controller.receiveEventFrom(self, Handshake::Constants::ADD_EVENT, { id: @controller.id })
-      @controller.setDelegate(self)
-      return @controller
+      controller.receiveEventFrom(self, Handshake::Constants::ADD_EVENT, { id: controller.id })
+      controller.setDelegate(self)
+      self.receiveFrom(controller, Handshake::Constants::ADD_EVENT)
+      return controller
     end
     
     def removeController(controller)
@@ -85,8 +86,6 @@ module Handshake
             otherController.receiveFrom(controller, message)
           end
       end
-      
     end
-    
   end
 end

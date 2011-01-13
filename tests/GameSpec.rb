@@ -36,18 +36,31 @@ end
 
 describe "Game.addController:" do
   
-  before do
+  before(:each) do
     @controllerSocket = Stubs::Websocket.new
     @gameSocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(0, Stubs::Websocket.new) 
+    @game = Handshake::Game.new(0, @gameSocket) 
   end
   
-  it "should create, add and return the controller and send it an add event" do
+  it "should create a controller and return it" do
+    controller = @game.addController("Browser", @controllerSocket)
+    controller.should be_a_kind_of(Handshake::Controller)
+    controller.id.should == 0
+    controller.type.should == "Browser"
+  end
+  
+  it "should send the controller an add event with the id" do
     @controllerSocket.expects(:send).with('game added {"id":0}').once
-    @controller = @game.addController("Browser", @controllerSocket)
-    @controller.should be_a_kind_of(Handshake::Controller)
-    @controller.id.should == 0
-    @controller.type.should == "Browser"
+    @game.addController("Browser", @controllerSocket)
+  end
+  
+  it "should send the game an add event from the controller" do
+    @gameSocket.expects(:send).with('0 added').once
+    @game.addController("Browser", @controllerSocket)
+  end
+  
+  it "should increment the controller count" do
+    @game.addController("Browser", @controllerSocket)
     @game.controllerCount.should == 1
   end
   
@@ -173,7 +186,7 @@ describe Handshake::Game, "as controller message delegate" do
     @firstSocket.sendMessage('1 event {"data":"value"}')
   end
   
-  it "should rout controller messages to all other controllers" do
+  it "should route controller messages to all other controllers" do
     @game.addController("Browser", @othersSocket)
     
     @othersSocket.expects(:send).with(equals('0 event {"data":"value"}')).twice
