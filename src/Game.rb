@@ -28,9 +28,11 @@ module Handshake
       unless(@controllers[controller.id] === controller)
         raise ArgumentError.new("Given controller is not connected to this game")
       end
+      self.receiveFrom(controller, Handshake::Constants::REMOVE_EVENT)
       controller.receiveFrom(self, Handshake::Constants::REMOVE_EVENT)
       controller.close
       @controllers.delete_at(controller.id)
+      
       @controllerCount -= 1
     end
     
@@ -87,5 +89,10 @@ module Handshake
           end
       end
     end
+    
+    def onClose(controller)
+      self.removeController(controller)
+    end
+    
   end
 end

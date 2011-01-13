@@ -193,3 +193,24 @@ describe Handshake::Game, "as controller message delegate" do
     @firstSocket.sendMessage('all event {"data":"value"}')
   end
 end
+
+describe Handshake::Game, "as controller close delegate" do
+
+  before(:each) do
+    @controlSocket = Stubs::Websocket.new
+    @gameSocket = Stubs::Websocket.new
+    @game = Handshake::Game.new(0, @gameSocket)
+    @game.addController("Browser", @controlSocket)
+  end
+  
+  it "should remove the controller that sent the close event" do
+    @controlSocket.sendClose()
+    @game.controllerCount.should == 0
+  end
+  
+  it "should send a remove event to the game from the closed controller" do
+    @gameSocket.expects(:send).with("0 #{Handshake::Constants::REMOVE_EVENT}")
+    @controlSocket.sendClose()
+  end
+
+end
