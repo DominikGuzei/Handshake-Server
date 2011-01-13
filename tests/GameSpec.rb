@@ -150,7 +150,7 @@ describe "Game.sendEventToAllFrom:" do
   
 end
 
-describe "Game as controller delegate" do
+describe Handshake::Game, "as controller message delegate" do
   
   before do
     @firstSocket = Stubs::Websocket.new
@@ -179,5 +179,4 @@ describe "Game as controller delegate" do
     @othersSocket.expects(:send).with(equals('0 event {"data":"value"}')).twice
     @firstSocket.sendMessage('all event {"data":"value"}')
   end
-  
 end
