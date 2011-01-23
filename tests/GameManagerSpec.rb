@@ -65,9 +65,55 @@ describe "GameManager" do
     it "should remove the game and all its controllers from the domain array" do
       @cSocket.expects(:send).with( equals("#{Handshake::Constants::GAME_ID} #{Handshake::Constants::REMOVE_EVENT}") ).twice
       @gameSocket.expects(:send).with( equals("#{Handshake::Constants::SERVER_ID} #{Handshake::Constants::REMOVE_EVENT}") ).once
+      @gameSocket.expects(:close_websocket).once
       @manager.removeGame(@key, @game.gameId)
       @manager.gameCount.should == 0
       expect{ @manager.getGame(@key, @game.gameId) }.to raise_error(IndexError)
+    end
+    
+  end
+  
+  describe "as game close delegate:" do
+    
+    before(:each) do
+      @manager = Handshake::GameManager.new
+      @gameSocket = Stubs::Websocket.new
+      @key = "fawep125l1j35jk3235jl2"
+      @game = @manager.addGame(@key, @gameSocket)
+    end
+    
+    it "removes the game and all its controllers" do
+      @game.expects(:removeAllControllers).once
+      @game.expects(:close).once
+      
+      @gameSocket.sendClose
+      
+      @manager.gameCount.should == 0
+    end
+    
+  end
+  
+  describe "as game message delegate" do
+    
+    before(:each) do
+      @manager = Handshake::GameManager.new
+      @gameSocket = Stubs::Websocket.new
+      @key = "fawep125l1j35jk3235jl2"
+      @game = @manager.addGame(@key, @gameSocket)
+      @cSocket = Stubs::Websocket.new
+      @game.addController("Browser", @cSocket)
+      @game.addController("Browser", @cSocket)
+      @message = "test {'data':0}"
+    end
+    
+    it "routes a direct message from the game to a controller" do
+      @cSocket.expects(:send).with(equals("#{Handshake::Constants::GAME_ID} #{@message}")).once
+      @gameSocket.sendMessage("0 #{@message}")
+    end
+    
+    it "routes a message to all controllers" do
+      @cSocket.expects(:send).with(equals("#{Handshake::Constants::GAME_ID} #{@message}")).twice
+      @gameSocket.sendMessage("all #{@message}")
     end
     
   end
