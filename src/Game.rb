@@ -6,9 +6,11 @@ module Handshake
     
     attr_reader :controllerCount
     attr_reader :gameId
+    attr_reader :domainKey
     
-    def initialize(gameId, websocket)
+    def initialize(domainKey, gameId, websocket)
       super(Handshake::Constants::GAME_ID, websocket)
+      @domainKey = domainKey
       @gameId = gameId
       @controllerCount = 0
       @controllers = []
