@@ -28,13 +28,13 @@ module Handshake
     
     def receiveFrom(other, message)
       unless(other.respond_to?(:id)) then
-        raise NoMethodError.new("Argument aim needs to have a 'id' getter")
+        raise NoMethodError.new("The sender needs to have an 'id' getter")
       end
       @websocket.send("#{other.id} #{message}")
     end
     
-    def receiveEventFrom(other, eventName, jsonObject)
-      json = jsonObject.to_json
+    def receiveEventFrom(other, eventName, jsonDataHash)
+      json = jsonDataHash.to_json
       self.receiveFrom(other, "#{eventName} #{json}")
     end
     
