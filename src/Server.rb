@@ -8,18 +8,20 @@ module Handshake
   
   class Server
   
-    @@domainKeys = { 'jf41j2k41adfae12j4o2j1p2' => 'localhost' }
+    @@domainKeys = {}
     @@gameManager = Handshake::GameManager.new
     
     # starts the websocket server and forwards new connections
-    # 
     
     def self.run!(ip, port, debug)
+      if(debug) then @@domainKeys[Handshake::Constants::LOCALHOST_DEBUG_KEY] = 'localhost' end
+      
       EventMachine::WebSocket.start(:host => ip, :port => port, :debug => debug) do |websocket|
         websocket.onopen do
           handleConnect(websocket)
         end
       end
+      
       puts "Server started listening for connections on #{ip}:#{port}"
     end
   
