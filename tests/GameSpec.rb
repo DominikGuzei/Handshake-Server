@@ -8,11 +8,13 @@ RSpec.configure do |config|
   config.mock_with :mocha
 end
 
+domainKey = "jgawe0jew3rk32lrjag"
+
 describe "Game.new:" do
   
   before do
     @websocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(0, @websocket)
+    @game = Handshake::Game.new(domainKey, 0, @websocket)
   end
   
   it "should extend Handshake::Communicator" do
@@ -23,12 +25,16 @@ describe "Game.new:" do
     @game.gameId.should == 0
   end
   
+  it "has a domain key attribute" do
+    @game.domainKey.should == domainKey
+  end
+  
 end
 
 describe "Game.controllerCount" do
   
   it "should return the number of controllers connected to the game" do
-    @game = Handshake::Game.new(0, Stubs::Websocket.new)
+    @game = Handshake::Game.new(domainKey, 0, Stubs::Websocket.new)
     @game.controllerCount.should == 0
   end
   
@@ -39,7 +45,7 @@ describe "Game.addController:" do
   before(:each) do
     @controllerSocket = Stubs::Websocket.new
     @gameSocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(0, @gameSocket) 
+    @game = Handshake::Game.new(domainKey, 0, @gameSocket) 
   end
   
   it "should create a controller and return it" do
@@ -70,7 +76,7 @@ describe "Game.removeController:" do
 
   before do
     @controllerSocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(0, Stubs::Websocket.new)
+    @game = Handshake::Game.new(domainKey, 0, Stubs::Websocket.new)
     @controller = @game.addController("Browser", @controllerSocket)
   end
   
@@ -93,7 +99,7 @@ describe "Game.getControllerById" do
   
   before do
     @controllerSocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(0, Stubs::Websocket.new)
+    @game = Handshake::Game.new(domainKey, 0, Stubs::Websocket.new)
     @controller = @game.addController("Browser", @controllerSocket)
   end
   
@@ -115,7 +121,7 @@ describe "Game.removeAllControllers:" do
   
   before do
     @controllerSocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(0, Stubs::Websocket.new)
+    @game = Handshake::Game.new(domainKey, 0, Stubs::Websocket.new)
     @controller1 = @game.addController("Browser", @controllerSocket)
     @controller2 = @game.addController("Browser", @controllerSocket)
   end
@@ -135,7 +141,7 @@ describe "Game.sendToAllFrom:" do
   
   before do
     @controllerSocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(0, Stubs::Websocket.new)
+    @game = Handshake::Game.new(domainKey, 0, Stubs::Websocket.new)
     @controller1 = @game.addController("Browser", @controllerSocket)
     @controller2 = @game.addController("Browser", @controllerSocket)
   end
@@ -151,7 +157,7 @@ describe "Game.sendEventToAllFrom:" do
   
   before do
     @controllerSocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(0, Stubs::Websocket.new)
+    @game = Handshake::Game.new(domainKey, 0, Stubs::Websocket.new)
     @controller1 = @game.addController("Browser", @controllerSocket)
     @controller2 = @game.addController("Browser", @controllerSocket)
   end
@@ -170,7 +176,7 @@ describe Handshake::Game, "as controller message delegate" do
     @othersSocket = Stubs::Websocket.new
     
     @gameSocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(0, @gameSocket)
+    @game = Handshake::Game.new(domainKey, 0, @gameSocket)
     
     @controller = @game.addController("Browser", @firstSocket)
     @otherController = @game.addController("Browser", @othersSocket)
@@ -199,7 +205,7 @@ describe Handshake::Game, "as controller close delegate" do
   before(:each) do
     @controlSocket = Stubs::Websocket.new
     @gameSocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(0, @gameSocket)
+    @game = Handshake::Game.new(domainKey, 0, @gameSocket)
     @game.addController("Browser", @controlSocket)
   end
   
