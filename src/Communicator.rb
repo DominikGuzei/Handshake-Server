@@ -39,8 +39,10 @@ module Handshake
     end
     
     def close
-      @status = Communicator::CLOSED
-      @websocket.close_websocket
+      if(@status != Communicator::CLOSED) then
+        @status = Communicator::CLOSED
+        @websocket.close_connection_after_writing
+      end
     end
     
     def setDelegate(delegate)
