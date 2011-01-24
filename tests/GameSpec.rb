@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'rspec'
 require 'mocha'
+require 'json'
 require_relative '../src/Game'
 require_relative 'stubs/Websocket'
 
@@ -8,215 +9,218 @@ RSpec.configure do |config|
   config.mock_with :mocha
 end
 
-domainKey = "jgawe0jew3rk32lrjag"
+domain = "example.com"
 
-describe "Game.new:" do
+describe Handshake::Game do
   
   before do
-    @websocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(domainKey, 0, @websocket)
-  end
-  
-  it "should extend Handshake::Communicator" do
-    @game.should be_a_kind_of(Handshake::Communicator)
-  end
-  
-  it "should have attribute gameId" do
-    @game.gameId.should == 0
-  end
-  
-  it "has a domain key attribute" do
-    @game.domainKey.should == domainKey
-  end
-  
-end
-
-describe "Game.controllerCount" do
-  
-  it "should return the number of controllers connected to the game" do
-    @game = Handshake::Game.new(domainKey, 0, Stubs::Websocket.new)
-    @game.controllerCount.should == 0
-  end
-  
-end
-
-describe "Game.addController:" do
-  
-  before(:each) do
-    @controllerSocket = Stubs::Websocket.new
     @gameSocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(domainKey, 0, @gameSocket) 
+    @game = Handshake::Game.new(domain, 0, @gameSocket)
   end
   
-  it "should create a controller and return it" do
-    controller = @game.addController("Browser", @controllerSocket)
-    controller.should be_a_kind_of(Handshake::Controller)
-    controller.id.should == 0
-    controller.type.should == "Browser"
-  end
-  
-  it "should send the controller an add event with the id" do
-    @controllerSocket.expects(:send).with('game added {"id":0}').once
-    @game.addController("Browser", @controllerSocket)
-  end
-  
-  it "should send the game an add event from the controller" do
-    @gameSocket.expects(:send).with('0 added').once
-    @game.addController("Browser", @controllerSocket)
-  end
-  
-  it "should increment the controller count" do
-    @game.addController("Browser", @controllerSocket)
-    @game.controllerCount.should == 1
-  end
-  
-end
+  describe ".initialize:" do
 
-describe "Game.removeController:" do
+    it "extends Handshake::Communicator" do
+      @game.should be_a_kind_of(Handshake::Communicator)
+    end
 
-  before do
-    @controllerSocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(domainKey, 0, Stubs::Websocket.new)
-    @controller = @game.addController("Browser", @controllerSocket)
-  end
-  
-  it "should remove the controller and send a remove event" do
-    @controllerSocket.expects(:send).with('game removed').once
-    @controllerSocket.expects(:close_websocket).once
-    @game.removeController(@controller)
-    @game.controllerCount.should == 0
-    @controller.status.should == Handshake::Communicator::CLOSED
-  end
-  
-  it "should only remove controllers that are connected to this game" do
-    fake = Handshake::Controller.new("Browser", 2, Stubs::Websocket.new)
-    expect{ @game.removeController(fake) }.to raise_error(ArgumentError)
-  end
-  
-end
+    it "has a gameId of zero" do
+      @game.gameId.should == 0
+    end
 
-describe "Game.getControllerById" do
-  
-  before do
-    @controllerSocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(domainKey, 0, Stubs::Websocket.new)
-    @controller = @game.addController("Browser", @controllerSocket)
-  end
-  
-  it "should return the controller with given id" do
-    @game.getControllerById(@controller.id).should equal(@controller)
-  end
-  
-  it "should throw an IndexError if id is not available" do
-    expect{ @game.getControllerById(2) }.to raise_error(IndexError)
-  end
-  
-  it "should just take integer values" do
-    expect{ @game.getControllerById("test") }.to raise_error(TypeError)
-  end
-  
-end
-
-describe "Game.removeAllControllers:" do
-  
-  before do
-    @controllerSocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(domainKey, 0, Stubs::Websocket.new)
-    @controller1 = @game.addController("Browser", @controllerSocket)
-    @controller2 = @game.addController("Browser", @controllerSocket)
-  end
-  
-  it "should delete all controllers and close them properly" do
-    @controllerSocket.expects(:send).with('game removed').twice
-    @controllerSocket.expects(:close_websocket).twice
-    @game.removeAllControllers
-    @game.controllerCount.should == 0
-    @controller1.status.should == Handshake::Communicator::CLOSED
-    @controller2.status.should == Handshake::Communicator::CLOSED
-  end
-  
-end
-
-describe "Game.sendToAllFrom:" do
-  
-  before do
-    @controllerSocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(domainKey, 0, Stubs::Websocket.new)
-    @controller1 = @game.addController("Browser", @controllerSocket)
-    @controller2 = @game.addController("Browser", @controllerSocket)
-  end
-  
-  it "should send the message to all connected controllers" do
-    @controllerSocket.expects(:send).with('game event {"data":"value"}').twice
-    @game.sendToAllFrom(@game, 'event {"data":"value"}')
-  end
-  
-end
-
-describe "Game.sendEventToAllFrom:" do
-  
-  before do
-    @controllerSocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(domainKey, 0, Stubs::Websocket.new)
-    @controller1 = @game.addController("Browser", @controllerSocket)
-    @controller2 = @game.addController("Browser", @controllerSocket)
-  end
-  
-  it "should send the event to all connected controllers" do
-    @controllerSocket.expects(:send).with('game event {"data":"value"}').twice
-    @game.sendEventToAllFrom(@game, "event", { data: "value" })
-  end
-  
-end
-
-describe Handshake::Game, "as controller message delegate" do
-  
-  before do
-    @firstSocket = Stubs::Websocket.new
-    @othersSocket = Stubs::Websocket.new
+    it "has a domain key attribute" do
+      @game.domain.should == domain
+    end
     
-    @gameSocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(domainKey, 0, @gameSocket)
-    
-    @controller = @game.addController("Browser", @firstSocket)
-    @otherController = @game.addController("Browser", @othersSocket)
-  end
-  
-  it "should route controller messages and send to game websocket" do
-    @gameSocket.expects(:send).with(equals('0 event {"data":"value"}')).once
-    @firstSocket.sendMessage('game event {"data":"value"}')
-  end
-  
-  it "should route controller messages to individual controllers" do
-    @othersSocket.expects(:send).with(equals('0 event {"data":"value"}')).once
-    @firstSocket.sendMessage('1 event {"data":"value"}')
-  end
-  
-  it "should route controller messages to all other controllers" do
-    @game.addController("Browser", @othersSocket)
-    
-    @othersSocket.expects(:send).with(equals('0 event {"data":"value"}')).twice
-    @firstSocket.sendMessage('all event {"data":"value"}')
-  end
-end
+    it "has controllerCount set to zero" do
+      @game.controllerCount.should == 0
+    end
 
-describe Handshake::Game, "as controller close delegate" do
-
-  before(:each) do
-    @controlSocket = Stubs::Websocket.new
-    @gameSocket = Stubs::Websocket.new
-    @game = Handshake::Game.new(domainKey, 0, @gameSocket)
-    @game.addController("Browser", @controlSocket)
-  end
-  
-  it "should remove the controller that sent the close event" do
-    @controlSocket.sendClose()
-    @game.controllerCount.should == 0
-  end
-  
-  it "should send a remove event to the game from the closed controller" do
-    @gameSocket.expects(:send).with("0 #{Handshake::Constants::REMOVE_EVENT}")
-    @controlSocket.sendClose()
   end
 
+  describe ".addController:" do
+
+    before(:each) do
+      @controllerSocket = Stubs::Websocket.new
+    end
+
+    it "creates a controller and returns it" do
+      controller = @game.addController("Browser", @controllerSocket)
+      controller.should be_a_kind_of(Handshake::Controller)
+      controller.id.should == 0
+      controller.type.should == "Browser"
+    end
+
+    it "sends the controller an add event with its id" do
+      expectedMessage = "#{Handshake::Constants::GAME_ID} #{Handshake::Constants::ADD_EVENT} {\"id\":0}"
+      @controllerSocket.expects(:send).with(expectedMessage).once
+      @game.addController("Browser", @controllerSocket)
+    end
+
+    it "sends the game an add event from the controller" do
+      @gameSocket.expects(:send).with("0 #{Handshake::Constants::ADD_EVENT}").once
+      @game.addController("Browser", @controllerSocket)
+    end
+
+    it "increments the controller count by one" do
+      @game.addController("Browser", @controllerSocket)
+      @game.controllerCount.should == 1
+    end
+
+  end
+
+  describe ".removeController:" do
+
+    before do
+      @controller = @game.addController("Browser", Stubs::Websocket.new)
+    end
+
+    it "removes the controller and sends it a remove event" do
+      @controller.expects(:receiveFrom).with(@game, Handshake::Constants::REMOVE_EVENT).once
+      @controller.expects(:close).once
+      @game.removeController(@controller)
+      @game.controllerCount.should == 0
+    end
+
+    it "only removes controllers that are connected to this game" do
+      fake = Handshake::Controller.new("Browser", 2, Stubs::Websocket.new)
+      expect{ @game.removeController(fake) }.to raise_error(ArgumentError)
+    end
+
+  end
+
+  describe ".getControllerById:" do
+
+    before do
+      @controller = @game.addController("Browser", Stubs::Websocket.new)
+    end
+
+    it "returns the controller with given id" do
+      @game.getControllerById(@controller.id).should == @controller
+    end
+
+    it "throws an IndexError if id is not available" do
+      expect{ @game.getControllerById(2) }.to raise_error(IndexError)
+    end
+
+    it "just takes integers as id" do
+      expect{ @game.getControllerById("test") }.to raise_error(TypeError)
+    end
+
+  end
+
+  describe ".removeAllControllers:" do
+
+    before do
+      @controller1 = @game.addController("Browser", Stubs::Websocket.new)
+      @controller2 = @game.addController("Browser", Stubs::Websocket.new)
+    end
+
+    it "deletes all controllers and closes them properly" do
+      @controller1.expects(:receiveFrom).with(@game, Handshake::Constants::REMOVE_EVENT).once
+      @controller2.expects(:receiveFrom).with(@game, Handshake::Constants::REMOVE_EVENT).once
+      
+      @controller1.expects(:close).once
+      @controller2.expects(:close).once
+
+      @game.removeAllControllers
+      @game.controllerCount.should == 0
+    end
+
+  end
+
+  describe ".sendToAllFrom:" do
+
+    before do
+      @controller1 = @game.addController("Browser", Stubs::Websocket.new)
+      @controller2 = @game.addController("Browser", Stubs::Websocket.new)
+    end
+
+    it "sends the message from x to all connected controllers" do
+      message = 'event {"data":"value"}'
+      @controller1.expects(:receiveFrom).with(@game, message).once
+      @controller2.expects(:receiveFrom).with(@game, message).once
+      
+      @game.sendToAllFrom(@game, message)
+    end
+
+  end
+
+  describe ".sendEventToAllFrom:" do
+
+    before do
+      @controller1 = @game.addController("Browser", Stubs::Websocket.new)
+      @controller2 = @game.addController("Browser", Stubs::Websocket.new)
+    end
+
+    it "sends the event from x to all connected controllers" do
+      event = { data: "value" }
+      eventName = "event"
+      
+      @controller1.expects(:receiveEventFrom).with(@game, eventName, event).once
+      @controller2.expects(:receiveEventFrom).with(@game, eventName, event).once
+      
+      @game.sendEventToAllFrom(@game, eventName, event)
+    end
+
+  end
+
+  describe "as message delegate of a controller" do
+
+    before do
+      @socket1 = Stubs::Websocket.new
+      @socket2 = Stubs::Websocket.new
+      @controller1 = @game.addController("Browser", @socket1)
+      @controller2 = @game.addController("Browser", @socket2)
+      @event = { data: "value" }.to_json
+      @eventName = "event"
+    end
+
+    it "routes controller messages and sends them to game websocket" do
+      expectedMessage = "#{@eventName} #{@event}"
+      @game.expects(:receiveFrom).with(@controller1, expectedMessage).once
+      
+      message = "#{Handshake::Constants::GAME_ID} #{@eventName} #{@event}"
+      @socket1.sendMessage(message)
+    end
+
+    it "routes controller messages to other individual controllers" do
+      expectedMessage = "#{@eventName} #{@event}"
+      @controller1.expects(:receiveFrom).with(@controller2, expectedMessage).once
+      
+      message = "#{@controller1.id} #{@eventName} #{@event}"
+      @socket2.sendMessage(message)
+    end
+
+    it "routes a controller message to all other controllers" do
+      controller3 = @game.addController("Browser", Stubs::Websocket.new)
+      expectedMessage = "#{@eventName} #{@event}"
+      
+      @controller2.expects(:receiveFrom).with( @controller1, expectedMessage ).once
+      controller3.expects(:receiveFrom).with( @controller1, expectedMessage ).once
+      
+      message = "#{Handshake::Constants::ALL_ID} #{@eventName} #{@event}"
+      @socket1.sendMessage(message)
+    end
+  end
+
+  describe "as close delegate of controller" do
+
+    before(:each) do
+      @controlSocket = Stubs::Websocket.new
+      @controller = @game.addController("Browser", @controlSocket)
+    end
+
+    it "removes the controller that sent the close event" do
+      @controlSocket.sendClose()
+      @game.controllerCount.should == 0
+    end
+
+    it "sends a remove event to the game from the closed controller" do
+      @gameSocket.expects(:send).with("#{@controller.id} #{Handshake::Constants::REMOVE_EVENT}")
+      @controlSocket.sendClose()
+    end
+
+  end
+  
 end
