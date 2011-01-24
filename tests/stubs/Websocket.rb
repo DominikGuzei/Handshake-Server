@@ -20,7 +20,7 @@ module Stubs
     def send(message) 
     end
     
-    def close_websocket 
+    def close_connection_after_writing 
     end
     
     def sendMessage(message)
