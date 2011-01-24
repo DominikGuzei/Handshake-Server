@@ -7,44 +7,50 @@ module Handshake
     
     def initialize
       @gameCount = 0
-      @domainKeys = {}
+      @domains = {}
     end
     
-    def addGame(key, websocket)
-      unless(@domainKeys[key])
-        @domainKeys[key] = []
+    def addGame(domain, websocket)
+      
+      unless(@domains[domain])
+        @domains[domain] = []
       end
-      id = @domainKeys[key].size
-      game = Game.new(key, id, websocket)
+      
+      id = @domains[domain].size
+      game = Game.new(domain, id, websocket)
+      
       addEventdata = { id: id }.to_json
       game.receive("#{Handshake::Constants::SERVER_ID} #{Handshake::Constants::ADD_EVENT} #{addEventdata}")
+      
       game.setDelegate(self)
-      @domainKeys[key].push(game)
+      
+      @domains[domain].push(game)
       @gameCount += 1
+      
       return game
     end
     
-    def getGame(key, gameId)
-      unless(@domainKeys[key])
-        raise IndexError.new("Key #{key} not found in GameManager")
+    def getGame(domain, gameId)
+      unless(@domains[domain])
+        raise IndexError.new("Key #{domain} not found in GameManager")
       end
-      unless(@domainKeys[key][gameId])
+      unless(@domains[domain][gameId])
         raise IndexError.new("Game with #{gameId} not found in GameManager")
       end
-      return @domainKeys[key][gameId]
+      return @domains[domain][gameId]
     end
     
-    def removeGame(key, gameId)
-      game = self.getGame(key, gameId)
+    def removeGame(domain, gameId)
+      game = self.getGame(domain, gameId)
       game.removeAllControllers
       game.receive("#{Handshake::Constants::SERVER_ID} #{Handshake::Constants::REMOVE_EVENT}")
       game.close
-      @domainKeys[key].delete_at(gameId)
+      @domains[domain].delete_at(gameId)
       @gameCount -= 1
     end
     
     def onClose(game)
-      removeGame(game.domainKey, game.gameId)
+      removeGame(game.domain, game.gameId)
     end
     
     def onMessage(game, message)
