@@ -4,10 +4,18 @@ module Handshake
   class GameManager
     
     attr_reader :gameCount
+    @@instance = nil
     
     def initialize
       @gameCount = 0
       @domains = {}
+    end
+    
+    def self.get
+      if(!@@instance) then
+        @@instance = Handshake::GameManager.new
+      end
+      return @@instance
     end
     
     def addGame(domain, websocket)

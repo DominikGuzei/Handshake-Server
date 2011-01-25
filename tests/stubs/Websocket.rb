@@ -1,6 +1,8 @@
 module Stubs
   class Websocket
     
+    attr_accessor :request
+    
     def onopen(&blk)     
       @onopen = Proc.new(blk);    
     end
