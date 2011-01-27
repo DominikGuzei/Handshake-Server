@@ -1,3 +1,4 @@
 .project
-.Gemfile.lock
+Gemfile.lock
 .bundle
+.bundle/*
